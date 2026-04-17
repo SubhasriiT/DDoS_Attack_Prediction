@@ -140,6 +140,20 @@ Once launched:
 - Automated IP mitigation (rate-limit and block)
 - Works on standard network traffic CSV data
 
+## 💡 Why This Project Matters
+
+- Detects DDoS attacks *before they fully occur*
+- Uses **temporal deep learning (BiGRU)** for sequence modeling
+- Implements **hierarchical classification** for better accuracy
+- Combines **autoencoder + supervised learning**
+- Provides a **real-time SOC dashboard**
+
+## ⚠️ Known Issues
+
+- Model loading may fail if TensorFlow/Keras versions mismatch
+- Ensure correct versions are installed using `requirements.txt`
+- Large datasets may slow down live simulation mode
+
 ## Contributing
 
 Contributions are welcome. If you would like to improve this project:
