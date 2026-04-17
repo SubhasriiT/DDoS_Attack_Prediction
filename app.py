@@ -30,13 +30,12 @@ def load_assets():
         import tensorflow as tf
         from tensorflow.keras.models import model_from_json
         import json
+        import zipfile, tempfile, shutil, os
+
+        # ✅ Define BASE_DIR FIRST before anything else
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
         def fix_batch_shape(model_path):
-            """Load model by patching the config JSON directly"""
-            # Load the keras model as a zip and patch config
-            import zipfile, tempfile, shutil, os
-
-            # Work in a temp directory
             tmpdir = tempfile.mkdtemp()
             patched_path = os.path.join(tmpdir, "patched.keras")
             shutil.copy(model_path, patched_path)
@@ -45,7 +44,6 @@ def load_assets():
                 names = z.namelist()
                 configs = {n: z.read(n) for n in names}
 
-            # Patch the config.json
             if 'config.json' in configs:
                 config_str = configs['config.json'].decode('utf-8')
                 config = json.loads(config_str)
@@ -65,7 +63,6 @@ def load_assets():
                 config = patch_config(config)
                 configs['config.json'] = json.dumps(config).encode('utf-8')
 
-            # Write patched zip
             patched2 = os.path.join(tmpdir, "patched2.keras")
             with zipfile.ZipFile(patched2, 'w', zipfile.ZIP_DEFLATED) as zout:
                 for name, data in configs.items():
@@ -75,12 +72,10 @@ def load_assets():
             shutil.rmtree(tmpdir)
             return model
 
+        # ✅ Now use BASE_DIR — it's already defined above
         stage1_model = fix_batch_shape(os.path.join(BASE_DIR, "stage1_fixed.keras"))
         stage2_model = fix_batch_shape(os.path.join(BASE_DIR, "stage2_fixed.keras"))
         encoder      = fix_batch_shape(os.path.join(BASE_DIR, "encoder_fixed.keras"))
-
-        import os
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
         scaler         = joblib.load(os.path.join(BASE_DIR, "scaler.pkl"))
         scaler_encoded = joblib.load(os.path.join(BASE_DIR, "scaler_encoded.pkl"))
@@ -90,7 +85,12 @@ def load_assets():
     except Exception as e:
         st.error(f"Error loading models: {e}")
         st.stop()
-stage1_model, stage2_model, encoder, scaler, scaler_encoded = load_assets()
+# After load_assets() function definition:
+assets = load_assets()
+if assets is None:
+    st.error("Model loading failed. Check logs.")
+    st.stop()
+stage1_model, stage2_model, encoder, scaler, scaler_encoded = assets
 # ================================
 # FEATURE LIST
 # ================================
@@ -149,6 +149,7 @@ mode = st.sidebar.radio(
 # =========================================================
 
 if mode == "Upload Dataset":
+    stage1_model, stage2_model, encoder, scaler, scaler_encoded = assets
     uploaded_file = st.sidebar.file_uploader("Upload Network Traffic CSV", type=["csv"])
 
     if uploaded_file:
@@ -286,6 +287,7 @@ if mode == "Upload Dataset":
 # =========================================================
 
 elif mode == "Live Traffic Simulation":
+    stage1_model, stage2_model, encoder, scaler, scaler_encoded = assets
     st.sidebar.markdown("### Live Stream Settings")
 
     stream_file = st.sidebar.file_uploader("Upload Traffic Log for Streaming", type=["csv"])
