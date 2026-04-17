@@ -1,9 +1,5 @@
 # AI-Based DDoS Attack Prediction and Prevention Using Network Behavior Modeling
-
-## 🚀 Live Demo
-
-👉 Try the app here:  
-https://ddosattackprediction-7xbdduef9rordymwyyhzov.streamlit.app/
+![App Preview](images/dashboard_metrics.png)
 
 An AI + Deep Learning project that detects DDoS attacks at early stages by analyzing
 temporal network traffic behavior using a Hybrid Hierarchical BiGRU model and a
@@ -60,6 +56,21 @@ A real-time Security Operations Center (SOC) interface providing:
 - Automated mitigation: allow / rate-limit / block IP
 - Live SOC metrics: blocked IPs, rate-limited IPs, total attacks
 - Real-time detection trend graph
+
+## 📸 Application Screenshots
+
+### 🔹 Input Interface
+Upload network traffic data and choose detection mode (Dataset / Live Simulation).
+![Input Interface](images/input_interface.png)
+
+### 🔹 Prediction Output
+Displays real-time classification: Normal / Early Warning / Attack along with source IP and mitigation trigger.
+![Prediction Output](images/prediction_output.png)
+
+### 🔹 SOC Dashboard
+Security Operations Center (SOC) dashboard showing attack trends, blocked IPs, and mitigation actions.
+![Dashboard](images/dashboard_metrics.png)
+
 
 ## Technologies Used
 
