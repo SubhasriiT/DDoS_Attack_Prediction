@@ -30,21 +30,18 @@ def load_assets():
         import tensorflow as tf
 
         stage1_model = tf.keras.models.load_model(
-            "model3_stage1.h5",
+            "stage1_fixed.h5",
             compile=False,
-            safe_mode=False   # 🔥 IMPORTANT FIX
         )
 
         stage2_model = tf.keras.models.load_model(
-            "model3_stage2.h5",
+            "stage2_fixed.h5",
             compile=False,
-            safe_mode=False
         )
 
         encoder = tf.keras.models.load_model(
-            "model3_encoder.h5",
+            "encoder_fixed.h5",
             compile=False,
-            safe_mode=False
         )
 
         scaler = joblib.load("scaler.pkl")
