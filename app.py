@@ -18,7 +18,7 @@ except:
 # ================================
 st.set_page_config(page_title="AI-Driven DDoS Early Warning System", layout="wide")
 
-WINDOW_SIZE = 30
+WINDOW_SIZE = 40
 label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 
 # ================================
