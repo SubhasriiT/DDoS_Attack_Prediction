@@ -4,7 +4,12 @@ import numpy as np
 import tensorflow as tf
 import joblib
 import time
-import winsound
+
+try:
+    import winsound
+    WINSOUND_AVAILABLE = True
+except ImportError:
+    WINSOUND_AVAILABLE = False
 
 # ================================
 # CONFIGURATION
@@ -136,7 +141,7 @@ if mode == "Upload Dataset":
                             pred_labels.append(stage2_label + 1)
 
                     # ================================
-                    # Traffic Stage Distribution (NEW)
+                    # Traffic Stage Distribution
                     # ================================
                     st.markdown("### 📈 Traffic Stage Distribution Across Dataset")
 
@@ -347,13 +352,15 @@ elif mode == "Live Traffic Simulation":
                         st.session_state.rate_limited_ips.remove(src_ip)
 
                 if pred != st.session_state.previous_state:
-                    if pred == 1: 
-                        winsound.Beep(1000,400)
-                    elif pred == 2: 
-                        winsound.Beep(1500,700)
+                    if WINSOUND_AVAILABLE:
+                        if pred == 1:
+                            winsound.Beep(1000, 400)
+                        elif pred == 2:
+                            winsound.Beep(1500, 700)
+                        elif pred == 0:
+                            winsound.Beep(700, 300)
+                    if pred == 2:
                         st.session_state.attack_count += 1
-                    elif pred == 0: 
-                        winsound.Beep(700,300)
 
                 st.session_state.previous_state = pred
 
