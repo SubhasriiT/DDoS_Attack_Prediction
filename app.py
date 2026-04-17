@@ -75,12 +75,15 @@ def load_assets():
             shutil.rmtree(tmpdir)
             return model
 
-        stage1_model = fix_batch_shape("stage1_fixed.keras")
-        stage2_model = fix_batch_shape("stage2_fixed.keras")
-        encoder      = fix_batch_shape("encoder_fixed.keras")
+        stage1_model = fix_batch_shape(os.path.join(BASE_DIR, "stage1_fixed.keras"))
+        stage2_model = fix_batch_shape(os.path.join(BASE_DIR, "stage2_fixed.keras"))
+        encoder      = fix_batch_shape(os.path.join(BASE_DIR, "encoder_fixed.keras"))
 
-        scaler         = joblib.load("scaler.pkl")
-        scaler_encoded = joblib.load("scaler_encoded.pkl")
+        import os
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+        scaler         = joblib.load(os.path.join(BASE_DIR, "scaler.pkl"))
+        scaler_encoded = joblib.load(os.path.join(BASE_DIR, "scaler_encoded.pkl"))
 
         return stage1_model, stage2_model, encoder, scaler, scaler_encoded
 
