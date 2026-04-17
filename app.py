@@ -28,38 +28,58 @@ label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 def load_assets():
     try:
         import tensorflow as tf
-        from tensorflow.keras.models import load_model
-        from tensorflow.keras.layers import InputLayer
+        from tensorflow.keras.models import model_from_json
+        import json
 
-        # 🔥 FIX: Custom InputLayer to ignore batch_shape error
-        class CustomInputLayer(InputLayer):
-            def __init__(self, **kwargs):
-                kwargs.pop("batch_shape", None)  # REMOVE problematic key
-                super().__init__(**kwargs)
+        def fix_batch_shape(model_path):
+            """Load model by patching the config JSON directly"""
+            # Load the keras model as a zip and patch config
+            import zipfile, tempfile, shutil, os
 
-        custom_objects = {
-            "InputLayer": CustomInputLayer
-        }
+            # Work in a temp directory
+            tmpdir = tempfile.mkdtemp()
+            patched_path = os.path.join(tmpdir, "patched.keras")
+            shutil.copy(model_path, patched_path)
 
-        stage1_model = load_model(
-            "stage1_fixed.keras",
-            compile=False,
-            custom_objects=custom_objects
-        )
+            with zipfile.ZipFile(patched_path, 'r') as z:
+                names = z.namelist()
+                configs = {n: z.read(n) for n in names}
 
-        stage2_model = load_model(
-            "stage2_fixed.keras",
-            compile=False,
-            custom_objects=custom_objects
-        )
+            # Patch the config.json
+            if 'config.json' in configs:
+                config_str = configs['config.json'].decode('utf-8')
+                config = json.loads(config_str)
 
-        encoder = load_model(
-            "encoder_fixed.keras",
-            compile=False,
-            custom_objects=custom_objects
-        )
+                def patch_config(obj):
+                    if isinstance(obj, dict):
+                        if obj.get('class_name') == 'InputLayer' and 'batch_shape' in obj.get('config', {}):
+                            batch_shape = obj['config'].pop('batch_shape')
+                            obj['config']['batch_input_shape'] = batch_shape
+                        for v in obj.values():
+                            patch_config(v)
+                    elif isinstance(obj, list):
+                        for item in obj:
+                            patch_config(item)
+                    return obj
 
-        scaler = joblib.load("scaler.pkl")
+                config = patch_config(config)
+                configs['config.json'] = json.dumps(config).encode('utf-8')
+
+            # Write patched zip
+            patched2 = os.path.join(tmpdir, "patched2.keras")
+            with zipfile.ZipFile(patched2, 'w', zipfile.ZIP_DEFLATED) as zout:
+                for name, data in configs.items():
+                    zout.writestr(name, data)
+
+            model = tf.keras.models.load_model(patched2, compile=False)
+            shutil.rmtree(tmpdir)
+            return model
+
+        stage1_model = fix_batch_shape("stage1_fixed.keras")
+        stage2_model = fix_batch_shape("stage2_fixed.keras")
+        encoder      = fix_batch_shape("encoder_fixed.keras")
+
+        scaler         = joblib.load("scaler.pkl")
         scaler_encoded = joblib.load("scaler_encoded.pkl")
 
         return stage1_model, stage2_model, encoder, scaler, scaler_encoded
@@ -67,7 +87,6 @@ def load_assets():
     except Exception as e:
         st.error(f"Error loading models: {e}")
         st.stop()
-stage1_model, stage2_model, encoder, scaler, scaler_encoded = load_assets()
 # ================================
 # FEATURE LIST
 # ================================
