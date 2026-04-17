@@ -27,9 +27,25 @@ label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 @st.cache_resource
 def load_assets():
     try:
-        stage1_model = tf.keras.models.load_model("model3_stage1.h5", compile=False)
-        stage2_model = tf.keras.models.load_model("model3_stage2.h5", compile=False)
-        encoder = tf.keras.models.load_model("model3_encoder.h5", compile=False)
+        import tensorflow as tf
+
+        stage1_model = tf.keras.models.load_model(
+            "model3_stage1.h5",
+            compile=False,
+            safe_mode=False   # 🔥 IMPORTANT FIX
+        )
+
+        stage2_model = tf.keras.models.load_model(
+            "model3_stage2.h5",
+            compile=False,
+            safe_mode=False
+        )
+
+        encoder = tf.keras.models.load_model(
+            "model3_encoder.h5",
+            compile=False,
+            safe_mode=False
+        )
 
         scaler = joblib.load("scaler.pkl")
         scaler_encoded = joblib.load("scaler_encoded.pkl")
