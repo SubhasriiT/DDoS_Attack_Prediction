@@ -28,51 +28,64 @@ label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 def load_assets():
     try:
         import tensorflow as tf
-        from tensorflow.keras.models import model_from_json
         import json
         import zipfile, tempfile, shutil, os
 
-        # ✅ Define BASE_DIR FIRST before anything else
+        # Define BASE_DIR FIRST before anything else
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+        # Debug: verify files are found
+        for fname in ["stage1_fixed.keras", "stage2_fixed.keras", "encoder_fixed.keras", "scaler.pkl", "scaler_encoded.pkl"]:
+            fpath = os.path.join(BASE_DIR, fname)
+            if not os.path.exists(fpath):
+                raise FileNotFoundError(f"Missing file: {fpath}")
+
         def fix_batch_shape(model_path):
+            model_path = str(model_path)
+
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(f"Model file not found: {model_path}")
+
             tmpdir = tempfile.mkdtemp()
-            patched_path = os.path.join(tmpdir, "patched.keras")
-            shutil.copy(model_path, patched_path)
+            try:
+                patched_path = os.path.join(tmpdir, "patched.keras")
 
-            with zipfile.ZipFile(patched_path, 'r') as z:
-                names = z.namelist()
-                configs = {n: z.read(n) for n in names}
+                with open(model_path, 'rb') as f_in:
+                    with open(patched_path, 'wb') as f_out:
+                        f_out.write(f_in.read())
 
-            if 'config.json' in configs:
-                config_str = configs['config.json'].decode('utf-8')
-                config = json.loads(config_str)
+                with zipfile.ZipFile(patched_path, 'r') as z:
+                    configs = {n: z.read(n) for n in z.namelist()}
 
-                def patch_config(obj):
-                    if isinstance(obj, dict):
-                        if obj.get('class_name') == 'InputLayer' and 'batch_shape' in obj.get('config', {}):
-                            batch_shape = obj['config'].pop('batch_shape')
-                            obj['config']['batch_input_shape'] = batch_shape
-                        for v in obj.values():
-                            patch_config(v)
-                    elif isinstance(obj, list):
-                        for item in obj:
-                            patch_config(item)
-                    return obj
+                if 'config.json' in configs:
+                    config = json.loads(configs['config.json'].decode('utf-8'))
 
-                config = patch_config(config)
-                configs['config.json'] = json.dumps(config).encode('utf-8')
+                    def patch_config(obj):
+                        if isinstance(obj, dict):
+                            if obj.get('class_name') == 'InputLayer' and 'batch_shape' in obj.get('config', {}):
+                                batch_shape = obj['config'].pop('batch_shape')
+                                obj['config']['batch_input_shape'] = batch_shape
+                            for v in obj.values():
+                                patch_config(v)
+                        elif isinstance(obj, list):
+                            for item in obj:
+                                patch_config(item)
+                        return obj
 
-            patched2 = os.path.join(tmpdir, "patched2.keras")
-            with zipfile.ZipFile(patched2, 'w', zipfile.ZIP_DEFLATED) as zout:
-                for name, data in configs.items():
-                    zout.writestr(name, data)
+                    config = patch_config(config)
+                    configs['config.json'] = json.dumps(config).encode('utf-8')
 
-            model = tf.keras.models.load_model(patched2, compile=False)
-            shutil.rmtree(tmpdir)
-            return model
+                patched2 = os.path.join(tmpdir, "patched2.keras")
+                with zipfile.ZipFile(patched2, 'w', zipfile.ZIP_DEFLATED) as zout:
+                    for name, data in configs.items():
+                        zout.writestr(name, data)
 
-        # ✅ Now use BASE_DIR — it's already defined above
+                model = tf.keras.models.load_model(patched2, compile=False)
+                return model
+
+            finally:
+                shutil.rmtree(tmpdir, ignore_errors=True)
+
         stage1_model = fix_batch_shape(os.path.join(BASE_DIR, "stage1_fixed.keras"))
         stage2_model = fix_batch_shape(os.path.join(BASE_DIR, "stage2_fixed.keras"))
         encoder      = fix_batch_shape(os.path.join(BASE_DIR, "encoder_fixed.keras"))
@@ -85,12 +98,15 @@ def load_assets():
     except Exception as e:
         st.error(f"Error loading models: {e}")
         st.stop()
+
+
 # After load_assets() function definition:
 assets = load_assets()
 if assets is None:
     st.error("Model loading failed. Check logs.")
     st.stop()
 stage1_model, stage2_model, encoder, scaler, scaler_encoded = assets
+
 # ================================
 # FEATURE LIST
 # ================================
