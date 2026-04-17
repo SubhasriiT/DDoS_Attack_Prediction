@@ -90,6 +90,7 @@ def load_assets():
     except Exception as e:
         st.error(f"Error loading models: {e}")
         st.stop()
+stage1_model, stage2_model, encoder, scaler, scaler_encoded = load_assets()
 # ================================
 # FEATURE LIST
 # ================================
