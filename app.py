@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,12 +6,26 @@ import tensorflow as tf
 import joblib
 import time
 
+# Safe winsound (Cloud compatible)
 try:
     import winsound
     WINSOUND_AVAILABLE = True
-except ImportError:
+except:
     WINSOUND_AVAILABLE = False
 
+# ================================
+# CONFIGURATION
+# ================================
+st.set_page_config(page_title="AI-Driven DDoS Early Warning System", layout="wide")
+
+WINDOW_SIZE = 30
+label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
+
+# ================================
+# DEBUG: CHECK FILES (VERY IMPORTANT)
+# ================================
+st.sidebar.write("📂 Files in directory:")
+st.sidebar.write(os.listdir())
 # ================================
 # CONFIGURATION
 # ================================
@@ -23,17 +38,32 @@ label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 # ================================
 # LOAD MODEL ASSETS
 # ================================
-
 @st.cache_resource
 def load_assets():
-    stage1_model = tf.keras.models.load_model("model3_stage1.keras")
-    stage2_model = tf.keras.models.load_model("model3_stage2.keras")
-    encoder = tf.keras.models.load_model("model3_encoder.keras")
-    scaler = joblib.load("scaler.pkl")
-    scaler_encoded = joblib.load("scaler_encoded.pkl")
-    return stage1_model, stage2_model, encoder, scaler, scaler_encoded
+    try:
+        stage1_model = tf.keras.models.load_model(
+            "model3_stage1.keras",
+            compile=False
+        )
 
-stage1_model, stage2_model, encoder, scaler, scaler_encoded = load_assets()
+        stage2_model = tf.keras.models.load_model(
+            "model3_stage2.keras",
+            compile=False
+        )
+
+        encoder = tf.keras.models.load_model(
+            "model3_encoder.keras",
+            compile=False
+        )
+
+        scaler = joblib.load("scaler.pkl")
+        scaler_encoded = joblib.load("scaler_encoded.pkl")
+
+        return stage1_model, stage2_model, encoder, scaler, scaler_encoded
+
+    except Exception as e:
+        st.error(f"Error loading models: {e}")
+        st.stop()
 
 # ================================
 # FEATURE LIST
