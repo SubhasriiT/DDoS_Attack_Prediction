@@ -175,6 +175,6 @@ For any queries or suggestions, feel free to reach out:
 
 **Name:** Subhasri
 
-**Email:** [your-email@gmail.com]
+**Email:** ktsubhasri2005@gmail.com
 
 **GitHub:** [SubhasriiT](https://github.com/SubhasriiT)
