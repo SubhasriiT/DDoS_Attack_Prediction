@@ -22,20 +22,6 @@ WINDOW_SIZE = 30
 label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 
 # ================================
-# DEBUG: CHECK FILES (VERY IMPORTANT)
-# ================================
-st.sidebar.write("📂 Files in directory:")
-st.sidebar.write(os.listdir())
-# ================================
-# CONFIGURATION
-# ================================
-
-st.set_page_config(page_title="AI-Driven DDoS Early Warning System", layout="wide")
-
-WINDOW_SIZE = 30
-label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
-
-# ================================
 # LOAD MODEL ASSETS
 # ================================
 @st.cache_resource
@@ -64,7 +50,7 @@ def load_assets():
     except Exception as e:
         st.error(f"Error loading models: {e}")
         st.stop()
-
+stage1_model, stage2_model, encoder, scaler, scaler_encoded = load_assets()
 # ================================
 # FEATURE LIST
 # ================================
