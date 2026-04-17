@@ -30,17 +30,17 @@ def load_assets():
         import tensorflow as tf
 
         stage1_model = tf.keras.models.load_model(
-            "stage1_fixed.h5",
+            "stage1_fixed.keras",
             compile=False,
         )
 
         stage2_model = tf.keras.models.load_model(
-            "stage2_fixed.h5",
+            "stage2_fixed.keras",
             compile=False,
         )
 
         encoder = tf.keras.models.load_model(
-            "encoder_fixed.h5",
+            "encoder_fixed.keras",
             compile=False,
         )
 
