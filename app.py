@@ -28,20 +28,35 @@ label_map = {0: "Normal", 1: "Early_DDoS", 2: "Attack"}
 def load_assets():
     try:
         import tensorflow as tf
+        from tensorflow.keras.models import load_model
+        from tensorflow.keras.layers import InputLayer
 
-        stage1_model = tf.keras.models.load_model(
+        # 🔥 FIX: Custom InputLayer to ignore batch_shape error
+        class CustomInputLayer(InputLayer):
+            def __init__(self, **kwargs):
+                kwargs.pop("batch_shape", None)  # REMOVE problematic key
+                super().__init__(**kwargs)
+
+        custom_objects = {
+            "InputLayer": CustomInputLayer
+        }
+
+        stage1_model = load_model(
             "stage1_fixed.keras",
             compile=False,
+            custom_objects=custom_objects
         )
 
-        stage2_model = tf.keras.models.load_model(
+        stage2_model = load_model(
             "stage2_fixed.keras",
             compile=False,
+            custom_objects=custom_objects
         )
 
-        encoder = tf.keras.models.load_model(
+        encoder = load_model(
             "encoder_fixed.keras",
             compile=False,
+            custom_objects=custom_objects
         )
 
         scaler = joblib.load("scaler.pkl")
